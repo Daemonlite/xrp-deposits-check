@@ -24,6 +24,9 @@ class Deposits(models.Model):
 	confirmations = models.PositiveIntegerField(default=0)
 	ack = models.BooleanField(default=False)  # to notify if the webhook recipient has received the request
 
+	def __str__(self):
+		return self.coin
+
 
 class Address(models.Model):
 	coin = models.CharField(max_length=15, blank=True, null=True)
