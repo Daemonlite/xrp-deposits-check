@@ -11,17 +11,12 @@ logger = logging.getLogger(__name__)
 def fetch_xrp_deposits():
     try:
         addresses = Address.objects.all()
-
         for address in addresses:
             xrp_address = address.address
             xrpscan_api_url = "https://api.xrpscan.com/api/v1/ledger/82398497/transactions"
-
             response = requests.get(xrpscan_api_url)
-
             if response.status_code == 200:
                 data = response.json()
-
-
                 for transaction in data:
 
                     if (
