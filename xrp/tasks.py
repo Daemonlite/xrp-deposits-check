@@ -16,7 +16,7 @@ def fetch_xrp_deposits():
 
         # Increment the ledger by one for the next fetch
         next_ledger = last_processed_ledger + 1
-        logger.warning(f"next ledger is {next_ledger}")
+        logger.warning(f"active ledger is {next_ledger}")
         addresses = Address.objects.all()
         for address in addresses:
             xrp_address = address.address
