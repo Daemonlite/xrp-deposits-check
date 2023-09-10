@@ -53,9 +53,8 @@ def fetch_xrp_deposits():
                 # Update the last processed ledger in the database
                 last_processed_ledger_obj.ledger = next_ledger
                 last_processed_ledger_obj.save()
-            except requests.exceptions.RequestException as req_err:
-                # Handle the request exception
-                logger.error(f"Request to XRPScan API failed: {str(req_err)}")
+            except Exception as e:
+                logger.error(f"Request to XRPScan API failed: {str(e)}")
             
             # Implement rate limiting to avoid overwhelming the API
             time.sleep(1)  # Sleep for 1 second before making the next request
