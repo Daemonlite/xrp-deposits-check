@@ -15,7 +15,7 @@ app.conf.timezone = 'UTC'
 
 app.conf.beat_scheduler = 'django_celery_beat.schedulers.DatabaseScheduler'
 app.conf.beat_schedule = {
-    'Run every 60 seconds': {
+    'run every 60 seconds': {
         'task': 'xrp.tasks.fetch_xrp_deposits',
         'schedule': 60,   
     },
