@@ -19,10 +19,7 @@ def fetch_xrp_deposits():
                 data = response.json()
                 for transaction in data:
 
-                    if (
-                        transaction.get("TransactionType") == "Payment" and
-                        transaction.get("Destination") == xrp_address
-                    ):
+                    if transaction.get("TransactionType") == "Payment" and transaction.get("Destination") == xrp_address:
                         Deposits.objects.create(
                             address=xrp_address,
                             sender_address=transaction["Account"],
