@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def fetch_xrp_deposits():
-    ledger = 82398497
+    ledger = 81699197
     try:
         addresses = Address.objects.all()
         for address in addresses:
@@ -22,14 +22,12 @@ def fetch_xrp_deposits():
                     if transaction.get("TransactionType") == "Payment" and transaction.get("Destination") == xrp_address:
                         xrp_amount_str = transaction["Amount"]["value"]
                         xrp_amount_decimal = Decimal(xrp_amount_str)
-                        
                         exchange_rate = Decimal("0.50")
                         usd_amount = xrp_amount_decimal * exchange_rate
                         fiat = round(usd_amount, 2)
                         form_fiat = '{:.2f}'.format(fiat / Decimal('1000000'))
                         logger.warning(xrp_amount_decimal )
                         logger.warning(form_fiat)
-
                         
                         Deposits.objects.create(
                             address=transaction["Destination"],
