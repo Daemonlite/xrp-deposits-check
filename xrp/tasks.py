@@ -22,16 +22,20 @@ def fetch_xrp_deposits():
                     if transaction.get("TransactionType") == "Payment" and transaction.get("Destination") == xrp_address:
                         xrp_amount_str = transaction["Amount"]["value"]
                         xrp_amount_decimal = Decimal(xrp_amount_str)
-                        fiat = xrp_amount_decimal * Decimal("0.50")
                         
-                        # Convert XRP amount to the desired format (2.410000)
-                        formatted_amount = '{:.6f}'.format(xrp_amount_decimal / Decimal('1000000'))
+                        exchange_rate = Decimal("0.50")
+                        usd_amount = xrp_amount_decimal * exchange_rate
+                        fiat = round(usd_amount, 2)
+                        form_fiat = '{:.2f}'.format(fiat / Decimal('1000000'))
+                        logger.warning(xrp_amount_decimal )
+                        logger.warning(form_fiat)
+
                         
                         Deposits.objects.create(
                             address=transaction["Destination"],
                             sender_address=transaction["Account"],
-                            amount=xrp_amount_decimal / Decimal('1000000'),  # Store the original amount for precise calculations if needed
-                            amount_fiat=0.0,  # Set this to the appropriate fiat value if available.
+                            amount=xrp_amount_decimal / Decimal('1000000'),  
+                            amount_fiat=form_fiat,
                             coin=transaction["Amount"]["currency"],
                             confirmed=True,
                             txid=transaction["hash"],
