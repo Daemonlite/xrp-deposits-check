@@ -82,4 +82,4 @@ class Address(models.Model):
 
 
 class LastProcessedLedger(models.Model):
-    ledger = models.IntegerField(default=81699196)
+    ledger = models.IntegerField(default=82398496)
