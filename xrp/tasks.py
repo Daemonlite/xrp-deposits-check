@@ -1,11 +1,8 @@
-
-# tasks.py
 import requests
 import logging
 from celery import shared_task
 from .models import Deposits, Address, LastProcessedLedger
 from decimal import Decimal
-from wallets.settings import REDIS
 import time
 
 logger = logging.getLogger(__name__)
@@ -19,7 +16,7 @@ def fetch_xrp_deposits():
 
         # Increment the ledger by one for the next fetch
         next_ledger = last_processed_ledger + 1
-        logger.warning(next_ledger)
+        logger.warning(f"next ledger is {next_ledger}")
         addresses = Address.objects.all()
         for address in addresses:
             xrp_address = address.address
@@ -64,7 +61,6 @@ def fetch_xrp_deposits():
             time.sleep(1)  # Sleep for 1 second before making the next request
 
         if not addresses:
-            # Log a message if there are no addresses to process
             logger.info("No addresses to process.")
 
     except Exception as e:
