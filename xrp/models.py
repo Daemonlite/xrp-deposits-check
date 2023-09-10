@@ -78,3 +78,8 @@ class Address(models.Model):
 			REDIS.set("tron_address_list", json.dumps(cached_list))
 		except Exception as e:
 			logger.warning(str(e))
+
+
+
+class LastProcessedLedger(models.Model):
+    ledger = models.IntegerField(default=81699196)

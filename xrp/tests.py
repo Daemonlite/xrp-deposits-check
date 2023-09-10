@@ -1,10 +1,12 @@
 from django.test import TestCase
 from decimal import Decimal
-xrp_amount_str = '2.410000'
-xrp_amount_decimal = Decimal(xrp_amount_str)
 
-exchange_rate = Decimal("0.50")
+from wallets.settings import REDIS
 
-usd_amount = xrp_amount_decimal * exchange_rate
+last_processed_ledger = 81699196
 
-print()
+last_processed_ledger = REDIS.set("last_processed_ledger",int(last_processed_ledger))
+
+ledge = REDIS.get("last_processed_ledger")
+
+print(ledge + 1)
