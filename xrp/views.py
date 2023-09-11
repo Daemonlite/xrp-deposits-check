@@ -23,5 +23,5 @@ def get_last_processed_ledger(request):
 @require_GET
 @csrf_exempt
 def get_all_addresses(request):
-    addresses = Address.objects.values()  # Fetch all addresses as a list of dictionaries
+    addresses = Address.objects.values() 
     return JsonResponse(list(addresses), safe=False)
