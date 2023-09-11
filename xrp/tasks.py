@@ -56,7 +56,6 @@ def fetch_xrp_deposits():
             except Exception as e:
                 logger.error(f"Request to XRPScan API failed: {str(e)}")
             
-            # Implement rate limiting to avoid overwhelming the API
             time.sleep(1)  # Sleep for 1 second before making the next request
 
         if not addresses:
