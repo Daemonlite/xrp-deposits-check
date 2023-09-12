@@ -21,7 +21,7 @@ def fetch_xrp_deposits():
                 if "ledger_index" in message:
                     ledger = message["ledger_index"]
                     logger.warning(f"Current ledger is {ledger}")
-                    break  # Exit the loop after obtaining the ledger value
+                    break
 
         if ledger is None:
             logger.warning("No ledger information received. Exiting.")
