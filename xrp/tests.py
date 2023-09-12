@@ -3,10 +3,12 @@ from decimal import Decimal
 
 from wallets.settings import REDIS
 
-last_processed_ledger = 81699196
 
-last_processed_ledger = REDIS.set("last_processed_ledger",int(last_processed_ledger))
+template = {
+    "xrp": "xrp_address_list",
+    "trx": "tron_address_list",
+}
 
-ledge = REDIS.get("last_processed_ledger")
+ledge = REDIS.get(template)
 
-print(ledge + 1)
+print(ledge )

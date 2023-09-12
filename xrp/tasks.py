@@ -3,7 +3,7 @@ import logging
 from celery import shared_task
 from .models import Deposits, Address, LastProcessedLedger
 from decimal import Decimal
-import time
+from wallets.settings import REDIS
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +17,16 @@ def fetch_xrp_deposits():
         # Increment the ledger by one for the next fetch
         next_ledger = last_processed_ledger + 1
         logger.warning(f"active ledger is {next_ledger}")
-        addresses = Address.objects.all()
+
+        # Use iterator to fetch addresses one by one
+        addresses = Address.objects.values("address").iterator(chunk_size=100)
+
         for address in addresses:
-            xrp_address = address.address
-            xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/{next_ledger}/transactions"
-            
+            xrp_address = address["address"]  # Extract the address value
+            xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/82398497/transactions"
             try:
                 response = requests.get(xrpscan_api_url)
                 response.raise_for_status()  # Raise an exception if the request fails
-
                 data = response.json()
                 for transaction in data:
                     if transaction.get("TransactionType") == "Payment" and transaction.get("Destination") == xrp_address:
@@ -55,8 +56,6 @@ def fetch_xrp_deposits():
                 last_processed_ledger_obj.save()
             except Exception as e:
                 logger.error(f"Request to XRPScan API failed: {str(e)}")
-            
-            time.sleep(1)  # Sleep for 1 second before making the next request
 
         if not addresses:
             logger.info("No addresses to process.")

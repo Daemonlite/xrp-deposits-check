@@ -47,35 +47,46 @@ class Address(models.Model):
 
 	def save(self, *args, **kwargs):
 		""" saving a cached list of all tron addresses, don't have a better way to do this"""
-		if not self.id and self.coin == "trx":
-			self.update_addresses(self.address)
+		if not self.id and self.coin in ["trx","xrp"]:
+			self.update_addresses(self.address, self.coin)
 		return super().save(*args, **kwargs)
 
-	@staticmethod
-	def fetch_tron_addresses():
+	# @staticmethod
+	def fetch_addresses(coin:str):
+		template = {
+			"xrp": "xrp_address_list",
+			"trx": "tron_address_list",
+		}
+		template = template[coin]
 		try:
-			cached_list = REDIS.get("tron_address_list")
+			cached_list = REDIS.get(template)
 			if cached_list:
 				cached_list = json.loads(cached_list)
 				return cached_list
 			else:
-				all_tron = Address.objects.values("address").filter(coin="trx").exclude(address=None)
+				all_tron = Address.objects.values("address").filter(coin=coin).exclude(address=None)
 				cached_list = [address["address"] for address in all_tron]
-				REDIS.set("tron_address_list", json.dumps(cached_list))
+				REDIS.set(template, json.dumps(cached_list))
 				return cached_list
 		except Exception as e:
 			logger.warning(str(e))
 			return []
 
-	def update_addresses(self, address):
+	def update_addresses(self, address, coin):
+		template = {
+			"xrp": "xrp_address_list",
+			"trx": "tron_address_list",
+		}
+		template = template[coin]
+		
 		try:
-			cached_list = REDIS.get("tron_address_list")
+			cached_list = REDIS.get(template)
 			if cached_list:
 				cached_list = json.loads(cached_list)
 			else:
-				cached_list = self.fetch_tron_addresses()
+				cached_list = self.fetch_addresses(coin)
 			cached_list.append(address)
-			REDIS.set("tron_address_list", json.dumps(cached_list))
+			REDIS.set(template, json.dumps(cached_list))
 		except Exception as e:
 			logger.warning(str(e))
 

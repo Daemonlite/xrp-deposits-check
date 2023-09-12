@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.views.decorators.http import require_GET
+from wallets.settings import REDIS
 
 
 @require_GET
@@ -25,3 +26,5 @@ def get_last_processed_ledger(request):
 def get_all_addresses(request):
     addresses = Address.objects.values() 
     return JsonResponse(list(addresses), safe=False)
+
+
