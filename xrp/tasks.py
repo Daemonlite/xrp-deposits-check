@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 @shared_task
 def fetch_xrp_deposits():
     url = "wss://s.altnet.rippletest.net/"
-    ledger = None  # Initialize ledger to None
-
     try:
         req = Subscribe(streams=[StreamParameter.LEDGER])
         with WebsocketClient(url) as client:
@@ -29,7 +27,6 @@ def fetch_xrp_deposits():
             logger.warning("No ledger information received. Exiting.")
             return
 
-        # Use iterator to fetch addresses one by one
         addresses = Address.objects.values("address").iterator(chunk_size=100)
         for address in addresses:
             xrp_address = address["address"]  # Extract the address value
