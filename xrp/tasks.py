@@ -4,23 +4,22 @@ from celery import shared_task
 from .models import Deposits, Address, LastProcessedLedger
 from decimal import Decimal
 from wallets.settings import REDIS
+from xrpl.clients import WebsocketClient
+url = "wss://s.altnet.rippletest.net/"
+from xrpl.models import Subscribe, StreamParameter
 
 logger = logging.getLogger(__name__)
 
 @shared_task
 def fetch_xrp_deposits():
+    req = Subscribe(streams=[StreamParameter.LEDGER])
+    with WebsocketClient(url) as client:
+        client.send(req)
+        for message in client:
+                print(message)
     try:
-        # Get the last processed ledger from the database
-        last_processed_ledger_obj, created = LastProcessedLedger.objects.get_or_create()
-        last_processed_ledger = last_processed_ledger_obj.ledger
-
-        # Increment the ledger by one for the next fetch
-        next_ledger = last_processed_ledger + 1
-        logger.warning(f"active ledger is {next_ledger}")
-
         # Use iterator to fetch addresses one by one
         addresses = Address.objects.values("address").iterator(chunk_size=100)
-
         for address in addresses:
             xrp_address = address["address"]  # Extract the address value
             xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/82398497/transactions"
@@ -51,9 +50,6 @@ def fetch_xrp_deposits():
                         )
                         logger.info(f"New deposit created for address {xrp_address}")
 
-                # Update the last processed ledger in the database
-                last_processed_ledger_obj.ledger = next_ledger
-                last_processed_ledger_obj.save()
             except Exception as e:
                 logger.error(f"Request to XRPScan API failed: {str(e)}")
 
