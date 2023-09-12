@@ -3,26 +3,38 @@ import logging
 from celery import shared_task
 from .models import Deposits, Address, LastProcessedLedger
 from decimal import Decimal
+import decimal
 from wallets.settings import REDIS
 from xrpl.clients import WebsocketClient
-url = "wss://s.altnet.rippletest.net/"
 from xrpl.models import Subscribe, StreamParameter
 
 logger = logging.getLogger(__name__)
 
 @shared_task
 def fetch_xrp_deposits():
-    req = Subscribe(streams=[StreamParameter.LEDGER])
-    with WebsocketClient(url) as client:
-        client.send(req)
-        for message in client:
-                print(message)
+    url = "wss://s.altnet.rippletest.net/"
+    ledger = None  # Initialize ledger to None
+
     try:
+        req = Subscribe(streams=[StreamParameter.LEDGER])
+        with WebsocketClient(url) as client:
+            client.send(req)
+            for message in client:
+                if "ledger_index" in message:
+                    ledger = message["ledger_index"]
+                    logger.warning(f"Current ledger is {ledger}")
+                    break  # Exit the loop after obtaining the ledger value
+
+        if ledger is None:
+            logger.warning("No ledger information received. Exiting.")
+            return
+
         # Use iterator to fetch addresses one by one
         addresses = Address.objects.values("address").iterator(chunk_size=100)
         for address in addresses:
             xrp_address = address["address"]  # Extract the address value
-            xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/82398497/transactions"
+            xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/{ledger}/transactions"
+
             try:
                 response = requests.get(xrpscan_api_url)
                 response.raise_for_status()  # Raise an exception if the request fails
@@ -33,7 +45,7 @@ def fetch_xrp_deposits():
                         xrp_amount_decimal = Decimal(xrp_amount_str)
                         exchange_rate = Decimal("0.50")
                         usd_amount = xrp_amount_decimal * exchange_rate
-                        fiat = round(usd_amount, 2)
+                        fiat = usd_amount.quantize(Decimal('0.01'), rounding=decimal.ROUND_HALF_UP)
                         form_fiat = '{:.2f}'.format(fiat / Decimal('1000000'))
                         logger.warning(xrp_amount_decimal)
                         logger.warning(form_fiat)
