@@ -21,7 +21,7 @@ def fetch_xrp_deposits():
         ledger_index = latest_ledger_response.result["ledger_index"]
         logger.warning(f"Latest Validated Ledger Index: {ledger_index}")
     else:
-        logger.error(f"Error: {latest_ledger_response.status_message}")
+        logger.error("An error ocurred while fetching the latest validated ledger index")
         return
 
     addresses = Address.objects.values("address").iterator(chunk_size=100)
