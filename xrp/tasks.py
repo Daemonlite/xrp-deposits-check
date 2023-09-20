@@ -2,7 +2,7 @@ import requests
 import logging
 from celery import shared_task
 from .models import Deposits, Address, LastProcessedLedger
-from decimal import Decimal
+from decimal import Decimal,ROUND_HALF_UP
 import decimal
 from wallets.settings import REDIS
 from xrpl.clients import JsonRpcClient
@@ -10,54 +10,49 @@ from xrpl.models.requests.ledger import Ledger
 
 logger = logging.getLogger(__name__)
 
+from django.db.models import Q  
+
 @shared_task
-def fetch_xrp_deposits():
-    # Code for fetching the latest validated ledger index from XRPL node
-    xrpl_client = JsonRpcClient("https://s1.ripple.com:51234") 
-    latest_ledger_request = Ledger(ledger_index="validated")
-    latest_ledger_response = xrpl_client.request(latest_ledger_request)
+def fetch_xrp_deposits(ledger_index):
+    address = REDIS.get("xrp_address_list")
+    addresses = address
 
-    if latest_ledger_response.is_successful():
-        ledger_index = latest_ledger_response.result["ledger_index"]
-        logger.warning(f"Latest Validated Ledger Index: {ledger_index}")
-    else:
-        logger.error("An error ocurred while fetching the latest validated ledger index")
-        return
-
-    addresses = Address.objects.values("address").iterator(chunk_size=100)
-    for address in addresses:
-        xrp_address = address["address"]  # Extract the address value
+    try:
         xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/{ledger_index}/transactions"
+        response = requests.get(xrpscan_api_url)
+        response.raise_for_status()  # Raise an exception if the request fails
+        data = response.json()
 
-        try:
-            response = requests.get(xrpscan_api_url)
-            response.raise_for_status()  # Raise an exception if the request fails
-            data = response.json()
-            for transaction in data:
-                if transaction.get("TransactionType") == "Payment" and transaction.get("Destination") == xrp_address:
-                    xrp_amount_str = transaction["Amount"]["value"]
-                    xrp_amount_decimal = Decimal(xrp_amount_str)
-                    exchange_rate = Decimal("0.50")
-                    usd_amount = xrp_amount_decimal * exchange_rate
-                    fiat = usd_amount.quantize(Decimal('0.01'), rounding=decimal.ROUND_HALF_UP)
-                    form_fiat = '{:.2f}'.format(fiat / Decimal('1000000'))
-                    logger.warning(xrp_amount_decimal)
-                    logger.warning(form_fiat)
+        # Create a list of addresses to filter in a single query
+        xrp_addresses = [address["address"] for address in addresses]
 
-                    Deposits.objects.create(
-                        address=transaction["Destination"],
-                        sender_address=transaction["Account"],
-                        amount=xrp_amount_decimal / Decimal('1000000'),
-                        amount_fiat=form_fiat,
-                        coin=transaction["Amount"]["currency"],
-                        confirmed=True,
-                        txid=transaction["hash"],
-                        ack=False,
-                    )
-                    logger.info(f"New deposit created for address {xrp_address}")
+        # Filter transactions in a single query
+        deposits_to_create = Deposits.objects.filter(
+            Q(TransactionType="Payment"),
+            Q(Destination__in=xrp_addresses),
+        ).values()
 
-        except Exception as e:
-            logger.error(f"Request to XRPScan API failed: {str(e)}")
+        # Create Deposits objects from filtered data
+        deposits_objects = [
+            Deposits(
+                address=transaction["Destination"],
+                sender_address=transaction["Account"],
+                amount=Decimal(transaction["Amount"]["value"]) / Decimal('1000000'),
+                amount_fiat=Decimal('0.50') * Decimal(transaction["Amount"]["value"]) / Decimal('1000000'),
+                coin=transaction["Amount"]["currency"],
+                confirmed=True,
+                txid=transaction["hash"],
+                ack=False,
+            )
+            for transaction in deposits_to_create
+        ]
+
+        # Bulk create the Deposits objects
+        Deposits.objects.bulk_create(deposits_objects)
+        logger.info(f"Created {len(deposits_objects)} new deposits.")
+
+    except Exception as e:
+        logger.error(f"Request to XRPScan API failed: {str(e)}")
 
     if not addresses:
         logger.info("No addresses to process.")

@@ -85,6 +85,8 @@ DATABASES = {
 import redis
 REDIS = redis.Redis(host="localhost", port=6379, db=0)
 
+
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
