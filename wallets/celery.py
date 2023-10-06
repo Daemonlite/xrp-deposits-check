@@ -10,8 +10,8 @@ app = Celery('wallets')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks()
-app.conf.broker_url = 'redis://localhost:6379/1'
-app.conf.result_backend = 'redis://localhost:6379/2'
+app.conf.broker_url = 'redis://localhost:6379/6'
+app.conf.result_backend = 'redis://localhost:6379/1'
 app.conf.timezone = 'UTC'
 
 app.conf.beat_schedule = {
@@ -23,3 +23,4 @@ app.conf.beat_schedule = {
         },
     },
 }
+app.conf.timezone = 'UTC'
