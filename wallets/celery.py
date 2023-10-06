@@ -22,5 +22,12 @@ app.conf.beat_schedule = {
             'expires': 15.0,
         },
     },
+    'fetch_stellar_payments': {
+        'task': 'xrp.tasks.fetch_stellar_payments',
+        'schedule': 5.0,
+        'options': {
+            'expires': 15.0,
+        }
+    },
 }
 app.conf.timezone = 'UTC'
