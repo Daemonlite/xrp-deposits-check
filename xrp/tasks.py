@@ -26,7 +26,6 @@ def fetch_xrp_deposits():
 
         try:
             response = requests.get(xrpscan_api_url)
-            response.raise_for_status()  # Raise an exception if the request fails
 
             data = response.json()
 
@@ -90,7 +89,6 @@ def fetch_stellar_payments():
 
         try:
             response = requests.get(stellar_api_url)
-            response.raise_for_status()
 
             data = response.json()
 
@@ -107,7 +105,7 @@ def fetch_stellar_payments():
                     exchange_rate = Decimal("0.11")
                     usd_amount = xlm_amount_decimal * exchange_rate
                     fiat = usd_amount.quantize(Decimal("0.00"), ROUND_HALF_UP)
-                    form_fiat = "{:.2f}".format(fiat )
+                    form_fiat = "{:.2f}".format(fiat)
                     logger.warning(xlm_amount_decimal)
                     logger.warning(form_fiat)
 
