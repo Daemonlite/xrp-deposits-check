@@ -104,15 +104,17 @@ def fetch_stellar_payments():
                     destination = payment['to']
                     xlm_amount_str = payment['amount']
                     xlm_amount_decimal = Decimal(xlm_amount_str)
-                    exchange_rate = Decimal("9.00")
+                    exchange_rate = Decimal("0.11")
                     usd_amount = xlm_amount_decimal * exchange_rate
                     fiat = usd_amount.quantize(Decimal("0.00"), ROUND_HALF_UP)
-                    form_fiat = "{:.2f}".format(fiat / Decimal("1000000"))
+                    form_fiat = "{:.2f}".format(fiat )
+                    logger.warning(xlm_amount_decimal)
+                    logger.warning(form_fiat)
 
                     Deposits.objects.create(
-                        sender=sender,
+                        sender_address=sender,
                         address=destination,
-                        amount=xlm_amount_decimal / Decimal("1000000"),
+                        amount=xlm_amount_decimal,
                         amount_fiat=form_fiat,
                         txid=payment['transaction_hash'],
                         confirmed=True,

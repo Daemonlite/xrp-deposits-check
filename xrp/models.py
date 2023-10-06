@@ -96,4 +96,4 @@ class LastProcessedLedger(models.Model):
     ledger = models.IntegerField(default=82398495)
 
 class StellerLedger(models.Model):
-	ledger = models.IntegerField(default=48434624)
+	ledger = models.IntegerField(default=48392304)

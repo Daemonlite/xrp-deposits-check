@@ -17,7 +17,7 @@ app.conf.timezone = 'UTC'
 app.conf.beat_schedule = {
     'run-every-2-seconds': {
         'task': 'xrp.tasks.fetch_xrp_deposits',
-        'schedule': 2.0, 
+        'schedule': 5.0, 
         'options': {
             'expires': 15.0,
         },
