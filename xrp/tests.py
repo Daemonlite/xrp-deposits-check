@@ -1,44 +1,54 @@
 # @shared_task
-# def fetch_xrp_deposits(ledger_index):
-#     address = REDIS.get("xrp_address_list")
-#     addresses = address
-
+# def fetch_stellar_payments():
 #     try:
-#         xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/{ledger_index}/transactions"
-#         response = requests.get(xrpscan_api_url)
-#         response.raise_for_status()  # Raise an exception if the request fails
-#         data = response.json()
+#         last_processed_ledger_obj, created = StellerLedger.objects.get_or_create()
+#         last_processed_ledger = last_processed_ledger_obj.ledger
+      
+#         next_ledger = last_processed_ledger + 1
+#         logger.warning(f"active stellar ledger is {next_ledger}")
+        
+#         addresses = Address.objects.values_list("address", flat=True)
+#         # Define the Stellar Horizon API endpoint
+#         stellar_api_url = f"https://horizon.stellar.org/ledgers/{next_ledger}/payments"
 
-#         # Create a list of addresses to filter in a single query
-#         xrp_addresses = [address["address"] for address in addresses]
+#         try:
+#             response = requests.get(stellar_api_url)
 
-#         # Filter transactions in a single query
-#         deposits_to_create = Deposits.objects.filter(
-#             Q(TransactionType="Payment"),
-#             Q(Destination__in=xrp_addresses),
-#         ).values()
+#             data = response.json()
 
-#         # Create Deposits objects from filtered data
-#         deposits_objects = [
-#             Deposits(
-#                 address=transaction["Destination"],
-#                 sender_address=transaction["Account"],
-#                 amount=Decimal(transaction["Amount"]["value"]) / Decimal('1000000'),
-#                 amount_fiat=Decimal('0.50') * Decimal(transaction["Amount"]["value"]) / Decimal('1000000'),
-#                 coin=transaction["Amount"]["currency"],
-#                 confirmed=True,
-#                 txid=transaction["hash"],
-#                 ack=False,
-#             )
-#             for transaction in deposits_to_create
-#         ]
+#             # Filter payments from the response
+#             payments = data['_embedded']['records']
 
-#         # Bulk create the Deposits objects
-#         Deposits.objects.bulk_create(deposits_objects)
-#         logger.info(f"Created {len(deposits_objects)} new deposits.")
+#             # Process each payment
+#             for payment in payments:
+#                 if payment['type'] == 'payment' and payment['to'] in addresses:
+#                     sender = payment['from']
+#                     destination = payment['to']
+#                     xlm_amount_str = payment['amount']
+#                     xlm_amount_decimal = Decimal(xlm_amount_str)
+#                     exchange_rate = Decimal("0.11")
+#                     usd_amount = xlm_amount_decimal * exchange_rate
+#                     fiat = usd_amount.quantize(Decimal("0.00"), ROUND_HALF_UP)
+#                     form_fiat = "{:.2f}".format(fiat)
+#                     logger.warning(xlm_amount_decimal)
+#                     logger.warning(form_fiat)
+
+#                     Deposits.objects.create(
+#                         sender_address=sender,
+#                         address=destination,
+#                         amount=xlm_amount_decimal,
+#                         amount_fiat=form_fiat,
+#                         txid=payment['transaction_hash'],
+#                         confirmed=True,
+#                         coin='stellar(xlm)',
+#                     )
+
+#             # Update the last processed ledger in the database
+#             last_processed_ledger_obj.ledger = next_ledger
+#             last_processed_ledger_obj.save()
+
+#         except Exception as e:
+#             logger.error(f"Request to Stellar Horizon API failed: {str(e)}")
 
 #     except Exception as e:
-#         logger.error(f"Request to XRPScan API failed: {str(e)}")
-
-#     if not addresses:
-#         logger.info("No addresses to process.")
+#         logger.exception(f"An error occurred: {str(e)}")
