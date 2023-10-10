@@ -1,4 +1,4 @@
-from .models import Address, Deposits,LastProcessedLedger
+from .models import Address, Deposits
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -14,11 +14,7 @@ def get_deposits_by_address(request):
     deposits = Deposits.objects.filter(address=address).values()
     return JsonResponse(list(deposits), safe=False)
 
-@require_GET    
-@csrf_exempt
-def get_last_processed_ledger(request):
-    last_processed_ledger = LastProcessedLedger.objects.get().ledger
-    return JsonResponse({"last_processed_ledger": last_processed_ledger})
+
 
 
 @require_GET

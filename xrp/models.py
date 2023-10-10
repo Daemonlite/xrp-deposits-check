@@ -47,7 +47,7 @@ class Address(models.Model):
 
 	def save(self, *args, **kwargs):
 		""" saving a cached list of all tron addresses, don't have a better way to do this"""
-		if not self.id and self.coin in ["trx","xrp"]:
+		if not self.id and self.coin in ["trx","xrp","xlm"]:
 			self.update_addresses(self.address, self.coin)
 		return super().save(*args, **kwargs)
 
@@ -56,6 +56,7 @@ class Address(models.Model):
 		template = {
 			"xrp": "xrp_address_list",
 			"trx": "tron_address_list",
+			"xlm": "xlm_address_list",
 		}
 		template = template[coin]
 		try:
@@ -76,6 +77,7 @@ class Address(models.Model):
 		template = {
 			"xrp": "xrp_address_list",
 			"trx": "tron_address_list",
+			"xlm": "xlm_address_list",
 		}
 		template = template[coin]
 		
@@ -92,8 +94,3 @@ class Address(models.Model):
 
 
 
-class LastProcessedLedger(models.Model):
-    ledger = models.IntegerField(default=82398495)
-
-class StellerLedger(models.Model):
-	ledger = models.IntegerField(default=48392304)
