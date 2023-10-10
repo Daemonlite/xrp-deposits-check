@@ -15,12 +15,8 @@ def get_deposits_by_address(request):
     return JsonResponse(list(deposits), safe=False)
 
 
-
-
 @require_GET
 @csrf_exempt
 def get_all_addresses(request):
-    addresses = Address.objects.values() 
+    addresses = Address.objects.values()
     return JsonResponse(list(addresses), safe=False)
-
-

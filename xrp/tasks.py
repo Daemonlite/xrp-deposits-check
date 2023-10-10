@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @shared_task
 def fetch_xrp_deposits():
     try:
-        ledge = REDIS.get('xrp_ledger')
+        ledge = REDIS.get("xrp_ledger")
 
         if ledge is not None:
             last_processed_ledger = int(ledge)
@@ -23,11 +23,13 @@ def fetch_xrp_deposits():
         logger.warning(f"active xrp ledger is {next_ledger}")
 
         # Fetch all addresses from the database
-        cached_value = REDIS.get('xrp_address_list')
+        cached_value = REDIS.get("xrp_address_list")
         logger.warning(cached_value)
-        addresses = cached_value.decode('utf-8')
+        addresses = cached_value.decode("utf-8")
 
-        xrpscan_api_url = f"https://api.xrpscan.com/api/v1/ledger/{next_ledger}/transactions"
+        xrpscan_api_url = (
+            f"https://api.xrpscan.com/api/v1/ledger/{next_ledger}/transactions"
+        )
 
         try:
             response = requests.get(xrpscan_api_url)
@@ -68,7 +70,7 @@ def fetch_xrp_deposits():
                 )
 
             last_processed_ledger = next_ledger
-            REDIS.set('xrp_ledger', next_ledger )
+            REDIS.set("xrp_ledger", next_ledger)
         except Exception as e:
             logger.error(f"Request to XRPScan API failed: {str(e)}")
 
@@ -78,19 +80,17 @@ def fetch_xrp_deposits():
         logger.exception(f"An error occurred: {str(e)}")
 
 
-
 @shared_task
 def fetch_stellar_payments():
     try:
-        last_processed_ledger = REDIS.get('stellar_ledger') or 48392304
+        last_processed_ledger = REDIS.get("stellar_ledger") or 48392304
         next_ledger = int(last_processed_ledger) + 1
 
-        logger.warning(f"Last processed ledger is {last_processed_ledger}")
         logger.warning(f"Active stellar ledger is {next_ledger}")
 
-        cached_value = REDIS.get('xlm_address_list')
+        cached_value = REDIS.get("xlm_address_list")
         logger.warning(cached_value)
-        addresses = cached_value.decode('utf-8')
+        addresses = cached_value.decode("utf-8")
 
         stellar_api_url = f"https://horizon.stellar.org/ledgers"
 
@@ -105,24 +105,26 @@ def fetch_stellar_payments():
                 data = response.json()
                 ledger_data.append(data)
             except Exception as e:
-                logger.error(f"Request to Stellar Horizon API for ledger {ledger} failed: {str(e)}")
+                logger.error(
+                    f"Request to Stellar Horizon API for ledger {ledger} failed: {str(e)}"
+                )
 
         deposits_to_create = []
 
         for data in ledger_data:
-            payments = data.get('_embedded', {}).get('records', [])
+            payments = data.get("_embedded", {}).get("records", [])
 
             for payment in payments:
-                if payment['type'] == 'payment' and payment['to'] in addresses:
-                    txid = payment['transaction_hash']
+                if payment["type"] == "payment" and payment["to"] in addresses:
+                    txid = payment["transaction_hash"]
 
                     if Deposits.objects.filter(txid=txid).exists():
                         # A Deposits object with the same txid already exists, skip creating a new one
                         continue
 
-                    sender = payment['from']
-                    destination = payment['to']
-                    xlm_amount_str = payment['amount']
+                    sender = payment["from"]
+                    destination = payment["to"]
+                    xlm_amount_str = payment["amount"]
                     xlm_amount_decimal = Decimal(xlm_amount_str)
                     exchange_rate = Decimal("0.11")
                     usd_amount = xlm_amount_decimal * exchange_rate
@@ -138,7 +140,7 @@ def fetch_stellar_payments():
                         amount_fiat=form_fiat,
                         txid=txid,
                         confirmed=True,
-                        coin='xlm',
+                        coin="xlm",
                     )
 
                     deposits_to_create.append(deposit)
@@ -147,7 +149,7 @@ def fetch_stellar_payments():
         if deposits_to_create:
             Deposits.objects.bulk_create(deposits_to_create)
 
-        REDIS.set('stellar_ledger', next_ledger + 4)
+        REDIS.set("stellar_ledger", next_ledger + 4)
 
     except Exception as e:
         logger.exception(f"An error occurred: {str(e)}")
