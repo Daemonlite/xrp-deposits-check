@@ -4,7 +4,7 @@ from celery import shared_task
 from .models import Deposits
 from decimal import Decimal, ROUND_HALF_UP
 from wallets.settings import REDIS
-
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ def fetch_xrp_deposits():
 
         # Fetch all addresses from the database
         cached_value = REDIS.get("xrp_address_list")
-        logger.warning(cached_value)
-        addresses = cached_value.decode("utf-8")
+        addresses = json.loads(cached_value)
+        logger.warning(addresses)
 
         xrpscan_api_url = (
             f"https://api.xrpscan.com/api/v1/ledger/{next_ledger}/transactions"
@@ -89,10 +89,10 @@ def fetch_stellar_payments():
         logger.warning(f"Active stellar ledger is {next_ledger}")
 
         cached_value = REDIS.get("xlm_address_list")
-        logger.warning(cached_value)
-        addresses = cached_value.decode("utf-8")
+        addresses = json.loads(cached_value)
+        logger.warning(addresses)
 
-        stellar_api_url = f"https://horizon.stellar.org/ledgers"
+        stellar_api_url = "https://horizon.stellar.org/ledgers"
 
         ledgers_to_fetch = range(next_ledger, next_ledger + 5)
         ledger_data = []
