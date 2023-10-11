@@ -86,8 +86,6 @@ def fetch_stellar_payments():
         last_processed_ledger = REDIS.get("stellar_ledger") or 48392304
         next_ledger = int(last_processed_ledger) + 1
 
-        logger.warning(f"Active stellar ledger is {next_ledger}")
-
         cached_value = REDIS.get("xlm_address_list")
         addresses = json.loads(cached_value)
         logger.warning(addresses)
