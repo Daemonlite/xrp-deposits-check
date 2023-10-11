@@ -77,7 +77,7 @@ def fetch_xrp_deposits():
         if not addresses:
             logger.info("No addresses to process.")
     except Exception as e:
-        logger.exception(f"An error occurred: {str(e)}")
+        logger.warning(f"An error occurred: {str(e)}")
 
 
 @shared_task
@@ -152,4 +152,4 @@ def fetch_stellar_payments():
         REDIS.set("stellar_ledger", next_ledger + 4)
 
     except Exception as e:
-        logger.exception(f"An error occurred: {str(e)}")
+        logger.warning("An error occurred: {str(e)}")
