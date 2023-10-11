@@ -150,4 +150,4 @@ def fetch_stellar_payments():
         REDIS.set("stellar_ledger", next_ledger + 4)
 
     except Exception as e:
-        logger.warning("An error occurred: {str(e)}")
+        logger.warning(f"An error occurred: {str(e)}")
