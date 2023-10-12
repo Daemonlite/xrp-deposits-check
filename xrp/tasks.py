@@ -1,7 +1,7 @@
 import requests
 import logging
 from celery import shared_task
-from .models import Deposits
+from xrp.models import Deposits, Address
 from decimal import Decimal, ROUND_HALF_UP
 from wallets.settings import REDIS
 import json
@@ -22,9 +22,8 @@ def fetch_xrp_deposits():
         next_ledger = last_processed_ledger + 1
         logger.warning(f"active xrp ledger is {next_ledger}")
 
-        # Fetch all addresses from the database
-        cached_value = REDIS.get("xrp_address_list")
-        addresses = json.loads(cached_value)
+        # Fetch all addresses from the cache
+        addresses = Address.fetch_addresses("xrp")
         logger.warning(addresses)
 
         xrpscan_api_url = (
@@ -86,8 +85,7 @@ def fetch_stellar_payments():
         last_processed_ledger = REDIS.get("stellar_ledger") or 48392304
         next_ledger = int(last_processed_ledger) + 1
 
-        cached_value = REDIS.get("xlm_address_list")
-        addresses = json.loads(cached_value)
+        addresses = Address.fetch_addresses("xlm")
         logger.warning(addresses)
 
         stellar_api_url = "https://horizon.stellar.org/ledgers"
