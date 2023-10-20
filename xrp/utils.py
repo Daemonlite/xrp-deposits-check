@@ -2,19 +2,15 @@ from wallets.settings import REDIS
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 import logging
-from django.dispatch import receiver
-from django.db.models.signals import post_migrate
 
 
 logger = logging.getLogger(__name__)
+
 
 class Cache:
     def __init__(self, cls, template):
         self.cls = cls
         self.template = template
-
-        # Connect the post_migrate signal to the handle_migrations method
-        post_migrate.connect(self.handle_migrations, sender=self.cls)
 
     def save_values(self):
         try:
@@ -40,3 +36,5 @@ class Cache:
         # Check if the cache key exists and invalidate it
         if REDIS.get(self.template):
             REDIS.delete(self.template)
+        else:
+            self.save_values()

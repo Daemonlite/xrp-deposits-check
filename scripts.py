@@ -5,29 +5,22 @@ from wallets.settings import REDIS
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wallets.settings")
 django.setup()
 
-from xrp.models import Address
+from xrp.models import Deposits
+from xrp.utils import Cache
 
-import requests
+# Create an instance of the Cache class
+cache_instance = Cache(
+    Deposits, "deposits"
+)  # Replace "your_template_name" with the actual template name
 
+# Call the save_values method on the cache instance
+cache_instance.save_values()
 
-
-
-
-
-
-
-# if cached_value:
-#     xrp_addresses = cached_value.decode('utf-8')  
-#     print(xrp_addresses)
-# else:
-#     print("XRP addresses not found in the cache.")
+# Optionally, you can fetch the values and print them
+cached_values = cache_instance.fetch_values()
+print(cached_values)
 
 
-import json
-
-addresses = Address.fetch_addresses("xlm")
-for address in addresses:
-    print(address)
-
-
-
+cache = Cache(cls=Deposits, template="deposits")
+print(cache.fetch_values())
+print()
