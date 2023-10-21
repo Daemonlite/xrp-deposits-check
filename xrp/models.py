@@ -5,6 +5,8 @@ import logging
 from django.db.models.signals import post_migrate
 
 logger = logging.getLogger(__name__)
+
+
 # Create your models here.
 class Deposits(models.Model):
     address = models.CharField(max_length=75, blank=True, null=True)
@@ -30,11 +32,8 @@ class Deposits(models.Model):
     ack = models.BooleanField(
         default=False
     )  # to notify if the webhook recipient has received the request
-    test = models.CharField(max_length=100, null=True, blank=True)
-    test2 = models.CharField(max_length=100, null=True, blank=True)
-
-    def ready(self):
-        post_migrate.connect(self.handle_migrations, sender=self)
+    test = models.BooleanField(default=True)
+    test2 = models.BooleanField(default=True)
 
     def __str__(self):
         return self.coin
