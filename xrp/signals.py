@@ -6,7 +6,7 @@ from xrp.models import Deposits
 
 
 @receiver(post_migrate)
-def my_callback(sender, **kwargs):
+def callback(sender, **kwargs):
     cache = Cache(Deposits, "deposits")
     cache.handle_migrations()
     print("handled")

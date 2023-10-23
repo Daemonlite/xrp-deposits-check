@@ -3,7 +3,6 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,8 +32,7 @@ class Cache:
             return json_data
 
     def handle_migrations(self, **kwargs):
-        # Check if the cache key exists and invalidate it
         if REDIS.get(self.template):
-            REDIS.delete(self.template)
+            self.save_values()
         else:
             self.save_values()

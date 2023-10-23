@@ -32,8 +32,7 @@ class Deposits(models.Model):
     ack = models.BooleanField(
         default=False
     )  # to notify if the webhook recipient has received the request
-    test = models.BooleanField(default=True)
-    test2 = models.BooleanField(default=True)
+    balance = models.BooleanField(default=False)
 
     def __str__(self):
         return self.coin
