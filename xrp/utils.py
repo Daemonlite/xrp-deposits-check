@@ -33,6 +33,7 @@ class Cache:
 
     def handle_migrations(self, **kwargs):
         if REDIS.get(self.template):
+            REDIS.delete(self.template)
             self.save_values()
         else:
             self.save_values()

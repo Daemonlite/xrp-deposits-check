@@ -33,6 +33,7 @@ class Deposits(models.Model):
         default=False
     )  # to notify if the webhook recipient has received the request
     balance = models.BooleanField(default=False)
+    test = models.IntegerField(default=22)
 
     def __str__(self):
         return self.coin
